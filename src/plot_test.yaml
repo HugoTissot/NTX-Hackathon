@@ -1,0 +1,56 @@
+graphs:
+  # - id: Broker
+  #   nodes:
+  #   - id: proxy
+  #     module: timeflux.nodes.zmq
+  #     class: Broker
+
+  - id: test
+    nodes:
+    - id: random
+      module: timeflux.nodes.random
+      class: Random
+      params:
+        columns: 3
+        rows_min: 10
+        rows_max: 10
+        seed: 1
+        names: ['1','2','3']
+    
+    - id: plot
+      module: nodes.bar_plot
+      class: BarPlot
+
+
+    - id: pca
+      module: timeflux.nodes.ml
+      class: Pipeline
+      params:
+        mode: fit_transform
+        event_start_accumulation:  start
+        event_stop_accumulation: stop
+        event_start_training: stop
+        steps:
+          - module: sklearn.decomposition
+            class: PCA
+            args:
+              n_components: 3
+    - id: display
+      module: timeflux.nodes.debug
+      class: Display
+      
+    - id: ui
+      module: timeflux_ui.nodes.ui
+      class: UI
+
+    edges:
+     - source: random
+       target: plot
+    - source: random
+      target: pca:training 
+    - source: random
+      target: pca 
+    - source: ui:events
+     # target: display
+      target: pca:events
+    rate: 10
