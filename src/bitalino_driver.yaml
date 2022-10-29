@@ -1,0 +1,77 @@
+graphs:
+
+  
+  - id: acquisition
+    nodes:
+    - id: bitalino
+      # module: timeflux.nodes.random
+      # class: Random
+      module: timeflux_bitalino.nodes.driver
+      class: Bitalino
+      params:
+        port: /dev/tty.BITalino-F6-81-Bluetoot
+        # port: /dev/tty.BITalino-02-44-DevB
+        rate: 1000
+        sensors:
+          A1: ECG
+          A2: EEG
+          A3: EDA
+    - id: pub_bitalino
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: bitalino
+    - id: pub_offsets
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: offsets
+    edges:
+    - source: bitalino
+      target: pub_bitalino
+    - source: bitalino:offsets
+      target: pub_offsets
+    rate: 30
+
+  - id: display
+    nodes:
+    - id: subscribe
+      module: timeflux.nodes.zmq
+      class: Sub
+      params:
+        topics: [ bitalino, offsets ]
+    - id: ui
+      module: timeflux_ui.nodes.ui
+      class: UI
+    - id: debug
+      module: timeflux.nodes.debug
+      class: Display
+    edges:
+      - source: subscribe:bitalino
+        target: ui:bitalino
+      - source: subscribe:bitalino
+        target: debug
+    rate: 10
+
+  # - id: record
+  #   nodes:
+  #   - id: sub
+  #     module: timeflux.nodes.zmq
+  #     class: Sub
+  #     params:
+  #       topics: [ bitalino, offsets ]
+  #   - id: save
+  #     module: timeflux.nodes.hdf5
+  #     class: Save
+  #   edges:
+  #     - source: sub:bitalino
+  #       target: save:bitalino
+  #     - source: sub:offsets
+  #       target: save:offsets
+  #   rate: 1
+
+  - id: broker
+    nodes:
+    - id: broker
+      module: timeflux.nodes.zmq
+      class: Broker
