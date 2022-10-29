@@ -1,6 +1,8 @@
 graphs:
 
-  # The publish/subscribe broker graph
+  ##################################
+  #  The publish/subscribe broker graph
+  ###################################
   - id: PubSubBroker
     nodes:
     # Allow communication between graphs
@@ -8,7 +10,9 @@ graphs:
       module: timeflux.nodes.zmq
       class: Broker
 
+  ##################################
   # The signal acquisition graph
+  ###################################
   - id: acquisition
     nodes:
     - id: bitalino
@@ -30,10 +34,12 @@ graphs:
     edges:
     - source: bitalino
       target: pub_bitalino
-    rate: 30
+    rate: 100
 
 
+  ##################################
   # The main processing graph
+  ###################################
   - id: Processing
     nodes:
     # Receive EEG signal from the network
@@ -58,29 +64,69 @@ graphs:
     - id: Bands
       module: timeflux_dsp.nodes.spectral
       class: Bands
-        # params:
-        #   bands: {'delta':[1,4], 'theta':[4,8], 'alpha':[8,12], 'beta': [12,35]}
+      params:
+        bands: {'P0': [3, 5], 'P1': [6, 8], 'P2': [9, 11], 'P3': [12, 14], 'P4': [15, 17], 'P5': [18, 20], 'P6': [21, 23], 'P7': [24, 26], 'P8': [27, 29], 'P9': [30, 32], 'P10': [33, 35], 'P11': [36, 38]}
     # Publish the frequency bands
-    - id: PublisherDelta
-      module: timeflux.nodes.zmq
+    - id: Publisher0 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P0
+    - id: Publisher1 
+      module: timeflux.nodes.zmq 
       class: Pub
       params:
-        topic: delta
-    - id: PublisherTheta
-      module: timeflux.nodes.zmq
-      class: Pub
-      params:
-        topic: theta
-    - id: PublisherAlpha
-      module: timeflux.nodes.zmq
-      class: Pub
-      params:
-        topic: alpha
-    - id: PublisherBeta
-      module: timeflux.nodes.zmq
-      class: Pub
-      params:
-        topic: beta
+        topic: P1 
+    - id: Publisher2 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P2 
+    - id: Publisher3 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+       topic: P3
+    - id: Publisher4 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+       topic: P4
+    - id: Publisher5 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P5
+    - id: Publisher6 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P6
+    - id: Publisher7
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P7
+    - id: Publisher8 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P8
+    - id: Publisher9 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P9
+    - id: Publisher10 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P10
+    - id: Publisher11 
+      module: timeflux.nodes.zmq 
+      class: Pub 
+      params: 
+        topic: P11
     # Connect nodes
     edges:
       - source: sub_bitalino:bitalino
@@ -89,18 +135,39 @@ graphs:
         target: Welch
       - source: Welch
         target: Bands
-      - source: Bands:theta
-        target: PublisherTheta
-      - source: Bands:delta
-        target: PublisherDelta
-      - source: Bands:alpha
-        target: PublisherAlpha
-      - source: Bands:beta
-        target: PublisherBeta
-    # Run this graph 30 times per second
-    rate: 30
+      - source: Bands:P0
+        target: Publisher0
+      - source: Bands:P1
+        target: Publisher1
+      - source: Bands:P2
+        target: Publisher2
+      - source: Bands:P3
+        target: Publisher3
+      - source: Bands:P4
+        target: Publisher4
+      - source: Bands:P5
+        target: Publisher5
+      - source: Bands:P6
+        target: Publisher6
+      - source: Bands:P6
+        target: Publisher6
+      - source: Bands:P7
+        target: Publisher7
+      - source: Bands:P8
+        target: Publisher8
+      - source: Bands:P9
+        target: Publisher9
+      - source: Bands:P10
+        target: Publisher10
+      - source: Bands:P11
+        target: Publisher11
+    # Run this graph 100 times per second
+    rate: 100
 
+  
+  ##################################
   # The recorder graph
+  ###################################
   - id: SaveToFile
     nodes:
     # Receive data streams from the broker
@@ -109,28 +176,51 @@ graphs:
       class: Sub
       params:
         topics:
-        - delta
-        - theta
-        - alpha
-        - beta
+        - P0
+        - P1
+        - P2
+        - P3
+        - P4
+        - P5
+        - P6
+        - P7
+        - P8
+        - P9
+        - P10
+        - P11
     # Record to file
     - id: Recorder
       module: timeflux.nodes.hdf5
       class: Save
       params: 
-        filename: band_calib.hdf5
+        filename: bands12_calib.hdf5
         path: ./bands/
     # Connect nodes
-    edges:
-      - source: Subscriber:delta
-        target: Recorder:delta
-      - source: Subscriber:theta
-        target: Recorder:theta
-      - source: Subscriber:alpha
-        target: Recorder:alpha
-      - source: Subscriber:beta
-        target: Recorder:beta
-      
+    edges:  
+      - source: Subscriber:P0
+        target: Recorder:P0
+      - source: Subscriber:P1
+        target: Recorder:P1
+      - source: Subscriber:P2
+        target: Recorder:P2
+      - source: Subscriber:P3
+        target: Recorder:P3
+      - source: Subscriber:P4
+        target: Recorder:P4
+      - source: Subscriber:P5
+        target: Recorder:P5
+      - source: Subscriber:P6
+        target: Recorder:P6
+      - source: Subscriber:P7
+        target: Recorder:P7
+      - source: Subscriber:P8
+        target: Recorder:P8
+      - source: Subscriber:P9
+        target: Recorder:P9
+      - source: Subscriber:P10
+        target: Recorder:P10
+      - source: Subscriber:P11
+        target: Recorder:P11 
     # Update file every few seconds
-    rate: 2
+    rate: 1
   
