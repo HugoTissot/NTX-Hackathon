@@ -1,0 +1,22 @@
+graphs:
+    - id: test
+      nodes:
+      - id: random
+        module: timeflux.nodes.random
+        class: Random
+        params:
+          columns: 3
+          rows_min: 1
+          rows_max: 1
+          seed: 1
+          names: ['1','2','3']
+      
+      - id: plot
+        module: nodes.3dPlot
+        class: ThreeDplot
+
+      edges:
+       - source: random
+         target: plot
+         
+      rate: 100
