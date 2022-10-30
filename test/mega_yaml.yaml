@@ -5,104 +5,110 @@ graphs:
   ###################################
   - id: acquisition
     nodes:
-    - id: bitalino
-      # module: timeflux.nodes.random
-      # class: Random
-      module: timeflux_bitalino.nodes.driver
-      class: Bitalino
+    - id: bitalino_eeg
+      module: timeflux_audio.nodes.signal
+      class: Additive
       params:
-        port: /dev/tty.BITalino-F6-81-Bluetoot
-        # port: /dev/tty.BITalino-02-44-DevB
-        rate: 1000
-        sensors:
-          A1: EEG
+      columns: 2
+      seed: 1
+      # module: timeflux_bitalino.nodes.driver
+      # class: Bitalino
+      # params:
+        # port: /dev/tty.BITalino-F6-81-Bluetoot
+        # # port: /dev/tty.BITalino-02-44-DevB
+        # rate: 1000
+        # sensors:
+        #   A1: EEG
     - id: pub_bitalino
       module: timeflux.nodes.zmq
       class: Pub
       params:
         topic: bitalino
     edges:
-    - source: bitalino
+    - source: bitalino_eeg
       target: pub_bitalino
     rate: 100
 
-  - id: lala
-    nodes:
-    - id: sub
-      module: timeflux.nodes.zmq
-      class: Sub
-      params:
-        topics: [bitalino ]
+  
+  ##################################
+  # Main Processing
+  ###################################
+  # - id: lala
+  #   nodes:
+  #   - id: sub
+  #     module: timeflux.nodes.zmq
+  #     class: Sub
+  #     params:
+  #       topics: [bitalino ]
 
-    # Continuously buffer the signal
-    - id: Rolling
-      module: timeflux.nodes.window
-      class: Window
-      params:
-        length: 1.5
-        step: 0.5
-    # Compute the power spectral density
-    - id: Welch
-      module: timeflux_dsp.nodes.spectral
-      class: Welch
-    # Average the power over band frequencies
-    - id: Bands
-      module: timeflux_dsp.nodes.spectral
-      class: Bands
-      params:
-        bands: {'P0': [3, 5], 'P1': [6, 8], 'P2': [9, 11], 'P3': [12, 14], 'P4': [15, 17], 'P5': [18, 20], 'P6': [21, 23], 'P7': [24, 26], 'P8': [27, 29], 'P9': [30, 32], 'P10': [33, 35], 'P11': [36, 38]}
+  #   # Continuously buffer the signal
+  #   - id: Rolling
+  #     module: timeflux.nodes.window
+  #     class: Window
+  #     params:
+  #       length: 1.5
+  #       step: 0.5
+  #   # Compute the power spectral density
+  #   - id: Welch
+  #     module: timeflux_dsp.nodes.spectral
+  #     class: Welch
+  #   # Average the power over band frequencies
+  #   - id: Bands
+  #     module: timeflux_dsp.nodes.spectral
+  #     class: Bands
+  #     params:
+  #       bands: {'P0': [3, 5], 'P1': [6, 8], 'P2': [9, 11], 'P3': [12, 14], 'P4': [15, 17], 'P5': [18, 20], 'P6': [21, 23], 'P7': [24, 26], 'P8': [27, 29], 'P9': [30, 32], 'P10': [33, 35], 'P11': [36, 38]}
+  #   - id: pca
+  #     module: timeflux.nodes.ml
+  #     class: Pipeline
+  #     params:
+  #       fit: true
+  #       mode: fit_transform
+  #       event_start_accumulation:  start
+  #       event_stop_accumulation: stop
+  #       event_start_training: stop
+  #       steps:
+  #         - module: sklearn.decomposition
+  #           class: PCA
+  #           args: 
+  #             n_components: 1
 
-    - id: pca
-      module: ml
-      class: Pipeline
-      params:
-        fit: true
-        mode: fit_transform
-        event_start_accumulation:  start
-        event_stop_accumulation: stop
-        event_start_training: stop
-        steps:
-          - module: sklearn.decomposition
-            class: PCA
-            args: 
-              n_components: 1
+  #   - id: pub_eeg
+  #     module: timeflux.nodes.zmq
+  #     class: Pub
+  #     params:
+  #       topic: eeg
+  #   - id: pub_bands
+  #     module: timeflux.nodes.zmq
+  #     class: Pub
+  #     params:
+  #       topic: bands
 
-    - id: pub_eeg
-      module: timeflux.nodes.zmq
-      class: Pub
-      params:
-        topic: eeg
-    - id: pub_bands
-      module: timeflux.nodes.zmq
-      class: Pub
-      params:
-        topic: bands
-
-    - id: pub_pca
-      module: timeflux.nodes.zmq
-      class: Pub
-      params:
-        topic: pca
-    edges:
-      - source: sub:bitalino
-        target: Rolling
-      - source: Rolling
-        target: Welch
-      - source: Welch
-        target: Bands
-      - source: sub:bitalino
-        target: pub_eeg
-      - source: Bands
-        target: pub_bands
-      - source: sub:bitalino
-        target: pca:events
-      - source: Bands
-        target: pca:training
-      - source: Bands
-        target: pca
-      - source: pca
-        target: pub_pca
-    rate: 10
+  #   - id: pub_pca
+  #     module: timeflux.nodes.zmq
+  #     class: Pub
+  #     params:
+  #       topic: pca
+  #   edges:
+  #     - source: sub:bitalino
+  #       target: Rolling
+  #     - source: Rolling
+  #       target: Welch
+  #     - source: Welch
+  #       target: Bands
+  #     - source: sub:bitalino
+  #       target: pub_eeg
+  #     - source: Bands
+  #       target: pub_bands
+  #     - source: sub:bitalino
+  #       target: pca:events
+  #     - source: Bands
+  #       target: pca:training
+  #     - source: Bands
+  #       target: pca
+  #     - source: pca
+  #       target: pub_pca
+  #   rate: 10
 
   - id: broker
     nodes:
@@ -110,29 +116,30 @@ graphs:
         module: timeflux.nodes.zmq
         class: Broker
 
-  - id: ui
+  - id: Subscriber
     nodes:
       - id: sub
         module: timeflux.nodes.zmq
         class: Sub
         params:
-          topics: [bitalino, bands, events, pca ]
+          # topics: [bitalino, bands, events, pca ]
+          topics: [bitalino ]
 
       - id: ui
         module: timeflux_ui.nodes.ui
         class: UI
 
-      - id: pub_events
-        module: timeflux.nodes.zmq
-        class: Pub
-        params:
-          topic: events
+      # - id: pub_events
+      #   module: timeflux.nodes.zmq
+      #   class: Pub
+      #   params:
+      #     topic: events
     edges:
       - source: sub:bitalino
         target: ui:eeg
-      - source: sub:bands
-        target: ui:bands
-      - source: sub:pca
-        target: ui:pca
-      - source: ui:events
-        target: pub_events
+      # - source: sub:bands
+      #   target: ui:bands
+      # - source: sub:pca
+      #   target: ui:pca
+      # - source: ui:events
+      #   target: pub_events
