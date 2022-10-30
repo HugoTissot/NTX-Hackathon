@@ -30,7 +30,7 @@ graphs:
         design: butter
 
     - id: pca
-      module: timeflux.nodes.ml
+      module: ml
       class: Pipeline
       params:
         fit: true
