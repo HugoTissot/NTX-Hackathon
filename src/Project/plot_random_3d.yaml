@@ -12,7 +12,7 @@ graphs:
           names: ['1','2','3']
       
       - id: plot
-        module: nodes.3dPlot
+        module: 3dPlot
         class: ThreeDplot
 
       edges:
