@@ -4,7 +4,6 @@ graphs:
   #   - id: proxy
   #     module: timeflux.nodes.zmq
   #     class: Broker
-
   - id: test
     nodes:
     - id: random
@@ -17,9 +16,9 @@ graphs:
         seed: 1
         names: ['1','2','3']
     
-    - id: plot
-      module: nodes.bar_plot
-      class: BarPlot
+   #- id: plot
+    #  module: bar_plot
+     # class: BarPlot
 
 
     - id: pca
@@ -44,8 +43,8 @@ graphs:
       class: UI
 
     edges:
-     - source: random
-       target: plot
+    #- source: random
+     # target: plot
     - source: random
       target: pca:training 
     - source: random

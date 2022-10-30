@@ -1,0 +1,167 @@
+graphs:
+  - id: lala
+    nodes:
+    - id: sub
+      module: timeflux.nodes.zmq
+      class: Sub
+      params:
+        topics: [events ]
+
+    # Fake data instead of EEG 
+    #- id: eeg
+      #module: timeflux_audio.nodes.signal
+      #class: Additive
+      #params: 
+        #frequencies: [1, 5, 10,  18, 30, 50] # center of delta, theta, alpha, beta, gamma bands and line noise 
+        #resolution: 500
+        #amplitudes:  [1, .5, .25,  .12, .06, 0.2] # Amplitudes of bands and line noise 
+        #name: Fpz
+    - id: bitalino
+      module: timeflux_bitalino.nodes.driver
+      class: Bitalino
+      params:
+        port: COM3
+        rate: 100
+        sensors:
+          A1: EEG
+
+
+    - id: display
+      module: timeflux.nodes.debug
+      class: Display
+
+    - id: Rolling
+      module: timeflux.nodes.window
+      class: Window
+      params:
+        length: 2
+        step: 0.5
+    # Compute the power spectral density
+    - id: Welch
+      module: timeflux_dsp.nodes.spectral
+      class: Welch
+    # Average the power over band frequencies
+    - id: Bands
+      module: timeflux_dsp.nodes.spectral
+      class: Bands
+      params:
+        bands: {'delta':[1,4], 'theta':[5,7], 'alpha':[8,12], 'beta': [13,20], 'gamma':[25,40]}
+    
+    #- id: filter_bank
+      #module: timeflux_dsp.nodes.filters
+      #class: FilterBank
+      #params:
+        #filters:
+          #'delta': {frequencies: [1, 4], order: 3}
+          #'theta': {frequencies: [5, 7], order: 3}
+          #'alpha': {frequencies: [8, 12], order: 3}
+          #'beta':  {frequencies: [13, 20], order: 3}
+          #'gamma': {frequencies: [25, 40], order: 3}
+        #design: butter
+
+    - id: pca
+      module: timeflux.nodes.ml
+      class: Pipeline
+      params:
+        fit: true
+        mode: fit_transform
+        event_start_accumulation:  start
+        event_stop_accumulation: stop
+        event_start_training: stop
+        steps:
+          - module: sklearn.decomposition
+            class: PCA
+            args: 
+              n_components: 1
+
+    - id: pub_eeg
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: eeg
+    - id: pub_bands
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: bands
+
+    - id: pub_pca
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: pca
+    edges:
+      - source: bitalino
+        target: display
+      - source: bitalino
+        target: Rolling
+      - source: Rolling
+        target: Welch
+      - source: Welch
+        target: Bands
+      - source: Bands
+        target: pca
+      - source: bitalino
+        target: pub_eeg
+      - source: Bands
+        target: pub_bands
+      - source: sub:events
+        target: pca:events
+      - source: Bands
+        target: pca:training
+      - source: Bands
+        target: pca
+      - source: pca
+        target: pub_pca
+    rate: 10
+
+  - id: broker
+    nodes:
+      - id: broker
+        module: timeflux.nodes.zmq
+        class: Broker
+
+  - id: ui
+    nodes:
+      - id: sub
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics: [eeg, bands, events, pca ]
+
+      - id: ui
+        module: timeflux_ui.nodes.ui
+        class: UI
+
+      - id: pub_events
+        module: timeflux.nodes.zmq
+        class: Pub
+        params:
+          topic: events
+    edges:
+      - source: sub:eeg
+        target: ui:eeg
+      - source: sub:bands
+        target: ui:bands
+      - source: sub:pca
+        target: ui:pca
+      - source: ui:events
+        target: pub_events
+
+  - id: sound_generator
+    nodes:
+      - id: sub2
+        module: timeflux.nodes.zmq
+        class: Sub
+        params:
+          topics: pca
+
+      - id: sounds
+        module: Sounds
+        class: SoundMaker
+
+    edges:
+      - source: sub2:pca
+        target: sounds
+
+    rate: 1

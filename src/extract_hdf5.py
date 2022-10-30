@@ -1,9 +1,9 @@
 import pandas as pd
 
-path12 = '../NTX-Hackathon/src/bands/bands12_calib.hdf5'
-path4 = '../NTX-Hackathon/src/bands/bands4_calib.hdf5'
+#path12 = '../NTX-Hackathon/src/bands/bands12_calib.hdf5'
+path4 = '../bands/b_calib.hdf5'
 
-bands12 = [f'P{i}' for i in range(12)]
+#bands12 = [f'P{i}' for i in range(12)]
 bands4 = ['delta','theta','alpha','beta']
 
 

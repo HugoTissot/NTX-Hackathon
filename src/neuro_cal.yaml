@@ -17,7 +17,7 @@ graphs:
       module: timeflux_bitalino.nodes.driver
       class: Bitalino
       params:
-        port: /dev/tty.BITalino-F6-81-Bluetoot
+        port: COM3
         # port: /dev/tty.BITalino-02-44-DevB
         rate: 1000
         sensors:
@@ -118,8 +118,8 @@ graphs:
       module: timeflux.nodes.hdf5
       class: Save
       params: 
-        filename: bands4_calib.hdf5
-        path: ./bands/
+        filename: b_calib.hdf5
+        path: bands/
     # Connect nodes
     edges:
       - source: Subscriber:delta
