@@ -42,6 +42,7 @@ graphs:
       module: timeflux_ui.nodes.ui
       class: UI
 
+<<<<<<< Updated upstream
     edges:
     #- source: random
      # target: plot
@@ -53,3 +54,16 @@ graphs:
      # target: display
       target: pca:events
     rate: 10
+=======
+  edges:
+  - source: random
+    target: plot
+  - source: random
+    target: pca:training 
+  - source: random
+    target: pca 
+  - source: ui:events
+   # target: display
+    target: pca:events
+  rate: 10
+>>>>>>> Stashed changes
